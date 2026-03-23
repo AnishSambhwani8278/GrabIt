@@ -10,6 +10,7 @@ const imageContainer = document.getElementById('imageContainer');
 const sharedImage = document.getElementById('sharedImage');
 const dropZone = document.getElementById('dropZone');
 const downloadBtn = document.getElementById('downloadBtn');
+const loadingOverlay = document.getElementById('loadingOverlay');
 
 const gestureStateUI = document.getElementById('gestureState');
 const sharingStateUI = document.getElementById('sharingState');
@@ -94,6 +95,7 @@ function updateUIMode() {
     dropZone.style.display = 'none';
     imageContainer.style.display = 'none';
     downloadBtn.style.display = 'none';
+    loadingOverlay.style.display = 'none';
 
     if (currentMode === 'share') {
         if (hasImageLocal) {
@@ -108,6 +110,8 @@ function updateUIMode() {
             if (receivedViaNetwork) {
                 downloadBtn.style.display = 'flex';
             }
+        } else if (isReceiving) {
+            loadingOverlay.style.display = 'flex';
         } else {
             dropZone.style.display = 'flex';
         }
@@ -216,16 +220,26 @@ fileInput.addEventListener('change', (e) => {
     if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
-            sharedImage.src = event.target.result;
-            hasImageLocal = true;
-            receivedViaNetwork = false;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width * 0.6;
+                canvas.height = img.height * 0.6;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                sharedImage.src = canvas.toDataURL('image/jpeg', 0.8);
+                hasImageLocal = true;
+                receivedViaNetwork = false;
 
-            sharedImage.className = 'anim-drop';
-            updateUIMode();
+                sharedImage.className = 'anim-drop';
+                updateUIMode();
 
-            setTimeout(() => {
-                sharedImage.className = '';
-            }, 600);
+                setTimeout(() => {
+                    sharedImage.className = '';
+                }, 600);
+            };
+            img.src = event.target.result;
 
         };
         reader.readAsDataURL(file);
@@ -257,16 +271,26 @@ imageArea.addEventListener('drop', (e) => {
     if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (event) => {
-            sharedImage.src = event.target.result;
-            hasImageLocal = true;
-            receivedViaNetwork = true;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width * 0.6;
+                canvas.height = img.height * 0.6;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                sharedImage.src = canvas.toDataURL('image/jpeg', 0.8);
+                hasImageLocal = true;
+                receivedViaNetwork = true;
 
-            sharedImage.className = 'anim-drop';
-            updateUIMode();
+                sharedImage.className = 'anim-drop';
+                updateUIMode();
 
-            setTimeout(() => {
-                sharedImage.className = '';
-            }, 600);
+                setTimeout(() => {
+                    sharedImage.className = '';
+                }, 600);
+            };
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     }
@@ -344,6 +368,7 @@ function triggerGrab() {
 function triggerDrop() {
     console.log("Triggered DROP");
     isReceiving = true;
+    updateUIMode();
     socket.emit('image_claimed');
 }
 
