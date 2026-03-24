@@ -6,7 +6,9 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    maxHttpBufferSize: 1e8
+    maxHttpBufferSize: 1e8,
+    pingInterval: 25000,
+    pingTimeout: 60000
 });
 
 const PORT = process.env.PORT || 3000;
