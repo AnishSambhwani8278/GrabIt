@@ -187,10 +187,16 @@ function showMainApp() {
 
 socket.on('connect', () => {
     statusIndicator.classList.add('ready');
+    if (currentRoomCode) {
+        socket.emit('join_room', { code: currentRoomCode });
+    }
 });
 
-socket.on('disconnect', () => {
+socket.on('disconnect', (reason) => {
     statusIndicator.classList.remove('ready');
+    if (reason === 'io server disconnect') {
+        socket.connect();
+    }
 });
 
 socket.on('sharing_state_update', (data) => {
